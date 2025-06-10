@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Home</title>
+    <head th:replace="/fragments/head :: head">
+
+</head>
+<body class="body-with-header">
+<div th:replace="fragments/common-header :: commonHeader"></div>
+
+<h2 th:if="${!#strings.isEmpty(account.name)}" th:text="${account.name} + '님 환영합니다.'">Home</h2>
+</body>
+</html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Vote</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css"/>
+    <link rel="stylesheet" th:href="@{/css/board.css}" href="/css/board.css" />
+</head>
+<body class="body-with-header">
+
+<!-- 공통 헤더 포함 -->
+<div th:replace="~{fragments/common-header :: commonHeader}"></div>
+
+<div class="container">
+    <h2>Create a Vote</h2>
+    <form id="voteForm" th:action="@{/vote/addVote}" method="post" enctype="multipart/form-data" onsubmit="return submitVote(event)">
+        <div class="form-group row">
+            <label for="voteTitle">Title</label>
+            <input type="text" id="voteTitle" name="voteTitle">
+        </div>
+
+        <div class="form-group row">
+            <label>Type</label>
+            <div class="form-inline with-add">
+                <div class="type-options">
+                    <label><input type="radio" name="type" value="text" checked onchange="changeType('text')"> Text</label>
+                    <label><input type="radio" name="type" value="date" onchange="changeType('date')"> Date</label>
+                </div>
+                <button type="button" class="add-btn" onclick="addOption()">+ Add</button>
+            </div>
+        </div>
+
+        <div id="voteOptions"></div>
+
+        <div class="form-group row">
+            <label for="endTime">Deadline</label>
+            <input type="datetime-local" id="endTime" name="endTime">
+        </div>
+
+        <div class="form-group row">
+            <label>Options</label>
+            <div class="form-inline checkbox-group">
+                <label><input type="checkbox" id="allowMultipleCheck"/>Multiple choice</label>
+                <label><input type="checkbox" id="isAnonymousCheck"/>Anonymous</label>
+            </div>
+            <input type="hidden" name="allowMultiple" id="allowMultipleHidden" value="false" />
+            <input type="hidden" name="isAnonymous" id="isAnonymousHidden" value="false" />
+        </div>
+
+        <div class="buttons">
+            <button type="submit">Submit</button>
+            <button type="button" onclick="location.href='/vote/voteBoard'">Cancel</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    let optionCount = 0;
+    let currentType = "text";
+
+    function changeType(type) {
+        currentType = type;
+        optionCount = 0;
+        document.getElementById("voteOptions").innerHTML = "";
+        addOption();
+    }
+
+    function addOption() {
+        optionCount++;
+        const container = document.getElementById("voteOptions");
+
+        const block = document.createElement("div");
+        block.className = "option-block";
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "form-group row";
+
+        const label = document.createElement("label");
+        label.innerText = `Option ${optionCount}`;
+        label.setAttribute("for", `option${optionCount}`);
+
+        const inputWrapper = document.createElement("div");
+        inputWrapper.className = "input-group-inline";
+
+        const input = document.createElement("input");
+        input.name = "options";
+        input.placeholder = "Enter option";
+        input.id = `option${optionCount}`;
+        input.type = currentType === "date" ? "date" : "text";
+
+        inputWrapper.appendChild(input);
+
+        if (currentType === "text") {
+            const fileInput = document.createElement("input");
+            fileInput.type = "file";
+            fileInput.accept = "image/*";
+            fileInput.style.display = "none";
+
+            const labelBtn = document.createElement("button");
+            labelBtn.className = "btn-upload";
+            labelBtn.type = "button";
+            labelBtn.innerText = "Upload Image";
+            labelBtn.onclick = () => fileInput.click();
+
+            const imgPreview = document.createElement("img");
+            imgPreview.className = "image-preview";
+            imgPreview.style.display = "none";
+
+            const hiddenImageInput = document.createElement("input");
+            hiddenImageInput.type = "hidden";
+            hiddenImageInput.name = "optionImageUrls";
+
+            // 🔥 이미지 업로드 이벤트
+            fileInput.addEventListener("change", async function () {
+                const file = this.files[0];
+                if (file) {
+                    const formData = new FormData();
+                    formData.append("file", file);
+
+                    const response = await fetch("/api/v1/upload", {
+                        method: "POST",
+                        body: formData
+                    });
+
+                    if (response.ok) {
+                        const imageUrl = await response.text();
+                        imgPreview.src = imageUrl;
+                        imgPreview.style.display = "block";
+                        hiddenImageInput.value = imageUrl;
+                    } else {
+                        console.log("이미지 업로드 실패");
+                        alert("이미지 업로드 실패");
+                    }
+                }
+            });
+
+            inputWrapper.appendChild(labelBtn);
+            inputWrapper.appendChild(fileInput);
+
+            wrapper.appendChild(label);
+            wrapper.appendChild(inputWrapper);
+            block.appendChild(wrapper);
+
+            const imageContainer = document.createElement("div");
+            imageContainer.className = "image-wrapper";
+            imageContainer.appendChild(imgPreview);
+            block.appendChild(imageContainer);
+            block.appendChild(hiddenImageInput);
+        } else {
+            wrapper.appendChild(label);
+            wrapper.appendChild(inputWrapper);
+            block.appendChild(wrapper);
+        }
+
+        container.appendChild(block);
+    }
+
+
+    function submitVote(event) {
+        const endTime = document.getElementById("endTime").value;
+        const title = document.getElementById("voteTitle").value;
+        const options = [];
+
+        for (let i = 1; i <= optionCount; i++) {
+            const input = document.getElementById(`option${i}`);
+            if (input && input.value.trim()) {
+                options.push(input.value.trim());
+            }
+        }
+
+        if (title.trim() === "" || options.length < 2) {
+            alert("Please enter a title and at least two options.");
+            return false;
+        }
+
+        if (endTime.trim() === "") {
+            alert("Please enter endTime.");
+            return false;
+        }
+
+        document.querySelector('#allowMultipleHidden').value = document.querySelector('#allowMultipleCheck').checked ? 'true' : 'false';
+        document.querySelector('#isAnonymousHidden').value = document.querySelector('#isAnonymousCheck').checked ? 'true' : 'false';
+
+        return true;
+    }
+
+    window.onload = () => addOption();
+
+    fileInput.addEventListener("change", async function () {
+        console.log("Debugging 00");
+        const file = this.files[0];
+        console.log(file);
+
+        if (file) {
+            console.log("Debugging 01");
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const response = await fetch("/api/v1/upload", {
+                method: "POST",
+                body: formData
+            });
+
+            if (response.ok) {
+                console.log("Debugging 02-1: response.ok");
+                const imageUrl = await response.text();
+                imgPreview.src = imageUrl;
+                imgPreview.style.display = "block";
+
+                // input 태그로 이미지 URL을 숨겨서 같이 submit 되게 설정
+                const hiddenImageInput = document.createElement("input");
+                hiddenImageInput.type = "hidden";
+                hiddenImageInput.name = `optionImageUrl${optionCount}`;
+                hiddenImageInput.value = imageUrl;
+                block.appendChild(hiddenImageInput);
+            } else {
+                console.log("Debugging 02-2: 이미지 업로드 실패");
+                alert("이미지 업로드 실패");
+            }
+        }
+    });
+
+</script>
+
+</body>
+</html>

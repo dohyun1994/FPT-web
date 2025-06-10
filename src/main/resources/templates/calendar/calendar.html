@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Calendar</title>
+    <head th:replace="/fragments/head :: head"></head>
+</head>
+<body class="body-with-header">
+
+<!-- 공통 헤더 -->
+<div th:replace="fragments/common-header :: commonHeader"></div>
+
+<!-- 전체 레이아웃 -->
+<div class="announcement-layout">
+    <!-- 사이드바 -->
+    <aside class="sidebar">
+        <ul>
+            <li><a th:href="@{/announce/announcement}">Board</a></li>
+            <li class="active"><a th:href="@{/calendar/calendar}">Calendar</a></li>
+            <li><a th:href="@{/vote/voteBoard}">Vote</a></li>
+        </ul>
+    </aside>
+
+    <!-- 본문 -->
+    <main class="announcement-main">
+        <h2 class="board-title">📅 내 일정 관리</h2>
+
+        <!-- 검색창 -->
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="사용자명을 검색하세요..." />
+            <button type="button" onclick="searchUsers()">Search</button>
+        </div>
+
+        <!-- 사용자별 일정 리스트 -->
+        <div id="userListContainer" class="announcement-list scroll-area">
+            <div th:each="user : ${usersWithSchedule}" class="announcement-item"
+                 th:onclick="'location.href=\'/calendar/userSchedule/' + ${user.id} + '\''" style="cursor:pointer">
+                <div class="announcement-top-row">
+                    <div class="announcement-title" th:text="${user.name}">사용자 이름</div>
+                    <span class="badge team">일정 있음</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="noResultMessage" style="display:none">
+            <p>등록된 일정이 있는 사용자가 없습니다.</p>
+        </div>
+
+        <!-- 일정 추가 버튼 -->
+        <div class="create-btn">
+            <button class="floating-create-btn" onclick="location.href='/calendar/addSchedule'">+ 일정 추가</button>
+        </div>
+    </main>
+</div>
+
+<!-- AJAX 검색 스크립트 -->
+<script>
+    const searchInput = document.getElementById("searchInput");
+    const userListContainer = document.getElementById("userListContainer");
+    const noResultMessage = document.getElementById("noResultMessage");
+
+    function searchUsers() {
+        const keyword = searchInput.value.trim();
+
+        fetch(`/calendar/searchUsers?keyword=${encodeURIComponent(keyword)}`)
+            .then(response => response.json())
+            .then(data => {
+                userListContainer.innerHTML = "";
+
+                if (data.length === 0) {
+                    noResultMessage.style.display = "block";
+                    return;
+                }
+
+                noResultMessage.style.display = "none";
+
+                data.forEach(user => {
+                    const div = document.createElement("div");
+                    div.className = "announcement-item";
+                    div.style.cursor = "pointer";
+                    div.onclick = () => window.location.href = `/calendar/userSchedule/${user.id}`;
+
+                    div.innerHTML = `
+                        <div class="announcement-top-row">
+                            <div class="announcement-title">${user.name}</div>
+                            <span class="badge team">일정 있음</span>
+                        </div>
+                    `;
+
+                    userListContainer.appendChild(div);
+                });
+            })
+            .catch(error => {
+                console.error("검색 실패:", error);
+            });
+    }
+
+
+    searchInput.addEventListener("keydown", function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();  // 기본 제출 방지
+            searchUsers();
+        }
+    });
+
+
+    // 입력할 때마다 자동 검색
+    searchInput.addEventListener("input", searchUsers);
+</script>
+
+</body>
+</html>

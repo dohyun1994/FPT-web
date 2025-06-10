@@ -1,0 +1,75 @@
+<!-- templates/fragments/common-header.html -->
+
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8" />
+    <title>Common Header</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css" />
+
+</head>
+<body>
+<div th:fragment="commonHeader">
+    <header class="global-header">
+        <div class="logo">
+            <a th:href="@{/}">
+                <img th:src="@{/images/FPT_Software_Logo.png}" alt="FPT Logo" height="30" />
+            </a>
+        </div>
+        <span sec:authorize="!isAuthenticated()">
+            <nav>
+                <a th:href="@{/register}">Register</a>
+
+            </nav>
+        </span>
+
+        <span sec:authorize="!isAuthenticated()">
+            <nav>
+
+                <a th:href="@{/login}">Login</a>
+            </nav>
+        </span>
+
+        <span sec:authorize="isAuthenticated()">
+            <nav>
+                <a th:href="@{/announce/announcement}">Announcement</a>
+            </nav>
+        </span>
+
+        <span sec:authorize="isAuthenticated()">
+            <nav>
+                <a th:href="@{/profile}">Profile</a>
+            </nav>
+        </span>
+
+<!--        <span sec:authorize="hasRole('ROLE_ADMIN')">-->
+<!--            <nav>-->
+<!--            <a href="/admin">admin</a>-->
+<!--            </nav>-->
+<!--        </span>-->
+
+        <span sec:authorize="hasAnyRole('ROLE_ADMIN','ROLE_EDITOR')">
+            <nav>
+            <a th:href="@{/admin}">Admin</a>
+            </nav>
+          </span>
+
+        <span sec:authorize="hasAuthority('ACCESS_ADMIN_PANEL')">
+            <nav>
+            <a th:href="@{/admin}">Admin</a>
+            </nav>
+        </span>
+
+        <span sec:authorize="isAuthenticated()">
+            <nav>
+                <a th:href="@{/logout}">Logout</a>
+            </nav>
+        </span>
+
+    </header>
+</div>
+
+</body>
+</html>

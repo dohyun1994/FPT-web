@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title th:text="${user.name} + '님의 일정 관리'">일정 관리</title>
+  <head th:replace="/fragments/head :: head">
+  </head>
+<body class="body-with-header">
+
+<div th:replace="fragments/common-header :: commonHeader"></div>
+
+<div class="page-wrapper">
+  <div class="container">
+    <h2 th:text="${user.name} + '님의 일정 관리'">사용자 이름의 일정 관리</h2>
+    <div id="calendar"></div>
+  </div>
+</div>
+
+
+<div class="modal fade" id="viewScheduleModal" tabindex="-1" aria-labelledby="viewScheduleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form th:action="@{/calendar/update}" method="post" id="updateForm">
+        <div class="modal-header">
+          <h5 class="modal-title" id="viewScheduleModalLabel">📌 일정 상세</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+        </div>
+
+        <div class="modal-body">
+          <p><strong>날짜:</strong> <span id="modalDate"></span></p>
+          <div class="mb-3">
+            <label for="updateTitle" class="form-label">제목</label>
+<!--            <input type="text" class="form-control" name="title" id="updateTitle" required-->
+<!--                   th:attr="disabled=${!isOwner} ? 'disabled' : null">-->
+            <textarea class="form-control" name="title" id="updateTitle" rows="3" th:disabled="${!isOwner}"></textarea>
+            <input type="hidden" name="id" id="updateId">
+            <input type="hidden" id="deleteId">
+          </div>
+        </div>
+
+        <!-- 수정/닫기 버튼 (권한 있음) -->
+        <div class="modal-footer justify-content-end gap-2" th:if="${isOwner}">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+          <button type="submit" class="btn btn-primary">수정</button>
+        </div>
+
+        <!-- 닫기 버튼만 (권한 없음) -->
+        <div class="modal-footer justify-content-end" th:if="${!isOwner}">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+        </div>
+      </form>
+
+      <!-- 삭제 버튼 (권한 있음) -->
+      <div class="modal-footer justify-content-end" th:if="${isOwner}">
+        <form th:action="@{/calendar/delete}" method="post" id="deleteForm">
+          <input type="hidden" name="id" id="deleteFormId">
+          <button type="submit" class="btn btn-danger">삭제</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script th:inline="javascript">
+  const isOwner = /*[[${isOwner}]]*/ false;
+  const userId = /*[[${user.id}]]*/ 0;
+  const schedules = /*[[${schedules}]]*/ [];
+
+  document.addEventListener('DOMContentLoaded', function () {
+    const calendarEl = document.getElementById('calendar');
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'dayGridMonth',
+      height: 600,
+      events: schedules.map(s => ({
+        title: '📌',
+        start: s.date,
+        allDay: true
+      })),
+
+      dateClick: function (info) {
+        fetch(`/calendar/getSchedule?userId=${userId}&date=${info.dateStr}`)
+          .then(response => {
+            if (!response.ok) {
+              throw new Error('Network response was not ok');
+            }
+
+            return response.text();
+          })
+          .then(text  => {
+
+            if (!text) {
+              return;
+            }
+
+            const data = JSON.parse(text);
+            if (!data || !data.id) return;
+
+            document.getElementById('modalDate').textContent = info.dateStr;
+
+            const titleInput = document.getElementById('updateTitle');
+            const updateIdInput = document.getElementById('updateId');
+            const deleteIdInput = document.getElementById('deleteId');
+            const deleteFormIdInput = document.getElementById('deleteFormId');
+
+            if (data && data.id) {
+              if (titleInput) titleInput.value = data.title;
+              if (updateIdInput) updateIdInput.value = data.id;
+              if (deleteIdInput) deleteIdInput.value = data.id;
+              if (deleteFormIdInput) deleteFormIdInput.value = data.id;
+            } else {
+              if (titleInput) titleInput.value = '';
+              if (updateIdInput) updateIdInput.value = '';
+              if (deleteIdInput) deleteIdInput.value = '';
+              if (deleteFormIdInput) deleteFormIdInput.value = '';
+            }
+
+            const modal = new bootstrap.Modal(document.getElementById('viewScheduleModal'));
+            modal.show();
+          })
+          .catch(error => {
+            console.error('일정 조회 실패:', error);
+        });
+      }
+    });
+
+    calendar.render();
+
+
+
+    const updateForm = document.getElementById('updateForm');
+    if (updateForm) {
+      updateForm.addEventListener('submit', function (e) {
+        const confirmUpdate = confirm('이 일정을 수정하시겠습니까?');
+        if (!confirmUpdate) {
+          e.preventDefault();
+        }
+      });
+    }
+
+
+    const deleteForm = document.getElementById('deleteForm');
+
+    if (deleteForm) {
+
+      deleteForm.addEventListener('submit', function (e) {
+
+        const confirmDelete = confirm('이 일정을 삭제하시겠습니까?');
+
+        if (!confirmDelete) {
+          e.preventDefault();
+          return;
+        }
+
+        const modal = document.getElementById('viewScheduleModal');
+        const modalInstance = bootstrap.Modal.getInstance(modal);
+        if (modalInstance) modalInstance.hide();
+      });
+    }
+  });
+
+
+</script>
+
+</body>
+</html>

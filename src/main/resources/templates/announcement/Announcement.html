@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Announcement Board</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" th:href="@{/css/announce.css}" href="/css/announce.css" />
+</head>
+
+<!-- 공통 헤더 포함 -->
+<body class="body-with-header">
+<div th:replace="fragments/common-header :: commonHeader"></div>
+<div class="announcement-layout">
+  <aside class="sidebar">
+    <ul>
+      <li class="active"><a href="#">Board</a></li>
+      <li style="margin: 10px 0;"><a href="/calendar/calendar">Calendar</a></li>
+      <li><a href="/vote/voteBoard">Vote</a></li>
+    </ul>
+  </aside>
+
+  <main class="announcement-main">
+    <h2 class="board-title">Announcement List</h2>
+
+    <div class="search-bar">
+      <input type="text" placeholder="검색어를 입력해주세요..." >
+      <button onclick="search()">Search</button>
+    </div>
+
+    <div class="announcement-list scroll-area">
+      <div class="announcement-item" onclick="location.href='/announce/detailAnnouncement'">
+        <div class="announcement-top-row">
+          <div class="announcement-title">WFH Schedule in May</div>
+          <span class="badge team">Team</span>
+          <div class="announcement-read">8 read</div>
+        </div>
+        <div class="announcement-meta">Apr 15, 6:00 PM</div>
+      </div>
+
+      <div class="announcement-item" onclick="location.href='/announce/detailAnnouncement'">
+        <div class="announcement-top-row">
+          <div class="announcement-title">정산 QR 안내</div>
+          <span class="badge settlement">Settlement</span>
+          <div class="announcement-read">5 read</div>
+        </div>
+        <div class="announcement-meta">Apr 12, 7:30 PM</div>
+      </div>
+    </div>
+
+    <div class="create-btn">
+      <button class="floating-create-btn" onclick="location.href='/announce/addAnnouncement'">+ Create</button>
+    </div>
+  </main>
+</div>
+</body>
+</html>

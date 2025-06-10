@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Announcement</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/announce.css">
+    <link rel="stylesheet" href="/css/map.css">
+
+</head>
+<body class="body-with-header" style="display: block;">
+<div class="page-wrapper">
+    <div class="container">
+        <h2>Create Announcement</h2>
+
+        <form action="/announce/add" method="post" enctype="multipart/form-data">
+            <!-- Title -->
+            <div class="form-group form-inline">
+                <label for="title">Title</label>
+                <input type="text" id="title" name="title" placeholder="Enter title" required>
+            </div>
+
+            <!-- Content -->
+            <div class="form-group form-inline" style="align-items: flex-start;">
+                <label for="content">Content</label>
+                <textarea id="content" name="content" rows="5" placeholder="Write your announcement here..." style="flex: 1;"></textarea>
+            </div>
+
+            <!-- Place -->
+            <div class="form-group form-inline">
+                <label for="place">Place</label>
+                <input type="text" id="place" name="placeName" placeholder="Search for a place..." style="flex: 1;">
+                <button type="button" onclick="searchPlaces()">🔍</button>
+
+            </div>
+
+            <!-- Map -->
+            <div id="map" style="width:700px;height:350px;"></div>
+
+            <!-- Optional: Attach file -->
+            <div class="form-group form-inline">
+                <label for="file">Attachment</label>
+                <input type="file" id="file" name="file">
+            </div>
+
+            <!-- Buttons -->
+            <div class="buttons">
+                <button type="submit">Submit</button>
+                <button type="reset" style="background-color: #bbb;">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- 팝업 모달 -->
+<div id="searchModal" class="modal" style="display:none; position:fixed; top:20%; left:50%; transform:translateX(-50%); background:#fff; border:1px solid #ccc; padding:20px; z-index:999; max-height:300px; overflow-y:auto; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+    <h4>검색 결과</h4>
+    <ul id="searchResults" style="list-style:none; padding:0; margin:10px 0;"></ul>
+    <button onclick="closeModal()" style="margin-top:10px;">닫기</button>
+</div>
+
+<script src="//dapi.kakao.com/v2/maps/sdk.js?appkey=8c1dae3aa60f3b6197ff18ebba6027ff&libraries=services"></script>
+<script>
+    const mapContainer = document.getElementById('map');
+    const map = new kakao.maps.Map(mapContainer, {
+        center: new kakao.maps.LatLng(37.566826, 126.9786567),
+        level: 3
+    });
+
+    const marker = new kakao.maps.Marker({ map: map });
+    const ps = new kakao.maps.services.Places();
+
+    function searchPlaces() {
+        const keyword = document.getElementById('place').value.trim();
+        if (!keyword) {
+            alert('검색어를 입력하세요.');
+            return;
+        }
+
+        ps.keywordSearch(keyword, function (data, status) {
+            if (status === kakao.maps.services.Status.OK) {
+                showSearchModal(data);
+            } else {
+                alert('검색 결과가 없습니다.');
+            }
+        });
+    }
+
+    function showSearchModal(results) {
+        const list = document.getElementById('searchResults');
+        list.innerHTML = '';
+
+        results.forEach((place) => {
+            const item = document.createElement('li');
+            item.innerText = `${place.place_name} - ${place.road_address_name || place.address_name}`;
+            item.onclick = function () {
+                const coords = new kakao.maps.LatLng(place.y, place.x);
+                map.setCenter(coords);
+                marker.setPosition(coords);
+                document.getElementById('place').value = place.place_name;
+                closeModal();
+            };
+            list.appendChild(item);
+        });
+
+        document.getElementById('searchModal').style.display = 'block';
+    }
+
+    function closeModal() {
+        document.getElementById('searchModal').style.display = 'none';
+    }
+</script>
+</body>
+
+
+</html>

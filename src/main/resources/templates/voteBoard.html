@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vote Board</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}" href="/css/style.css" />
+    <link rel="stylesheet" th:href="@{/css/board.css}" href="/css/board.css" />
+</head>
+<body class="body-with-header">
+
+<!-- 공통 헤더 -->
+<div th:replace="fragments/common-header :: commonHeader"></div>
+<div class="announcement-layout">
+    <aside class="sidebar">
+        <ul>
+            <li><a href="/announce/announcement">Board</a></li>
+            <li><a href="/calendar/calendar">Calendar</a></li>
+            <li class="active"><a href="/vote/voteBoard">Vote</a></li>
+        </ul>
+    </aside>
+
+    <!-- 메인 컨텐츠 -->
+    <main class="main-content">
+        <div class="vote-board">
+            <h2>Vote List</h2>
+
+            <!-- 스크롤이 적용될 리스트 영역 -->
+            <div class="vote-list-scrollable">
+                <div class="vote-item" th:each="vote : ${votes}" th:onclick="|location.href='/vote/voteDetail?voteId=${vote.id}'|">
+
+                    <div>
+                        <div class="vote-title" th:text="${vote.title}">투표 제목</div>
+                        <div class="vote-meta"
+                             th:text="${(vote.allowMultiple ? 'Multiple choice' : 'Single choice') + ' | ' +
+                                       (vote.anonymous ? 'Anonymous' : 'Public') + ' | Ends: ' +
+                                       #temporals.format(vote.endTime, 'MMM d, h:mm a')}">
+                        </div>
+                    </div>
+
+                    <div class="vote-meta">
+                        <span th:text="${participantCountMap[vote.id]} + ' participants'"></span>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- 항상 아래에 고정된 버튼 -->
+            <div class="create-btn">
+                <button class="floating-create-btn" onclick="location.href='/vote/addVote'">+ Create</button>
+            </div>
+        </div>
+    </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>일정 추가</title>
+  <head th:replace="/fragments/head :: head">
+
+</head>
+<body class="body-with-header">
+
+<div th:replace="fragments/common-header :: commonHeader"></div>
+
+<div class="page-wrapper">
+  <div class="container">
+    <h2>📅 날짜를 선택해 일정을 추가하세요</h2>
+    <div id="calendar" style="margin-bottom: 20px;"></div>
+
+    <div class="mt-auto d-flex justify-content-end">
+      <button type="button" class="btn btn-primary" onclick="location.href='/calendar/calendar'">Cancel</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- 🧾 일정 추가 모달 -->
+<div class="modal fade" id="scheduleModal" tabindex="-1" aria-labelledby="scheduleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form class="modal-content" id="scheduleForm" th:action="@{/calendar/save}" method="post">
+      <div class="modal-header">
+        <h5 class="modal-title" id="scheduleModalLabel">일정 추가</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label for="title" class="form-label">일정 제목</label>
+          <input type="text" class="form-control" style="height: 300px;" name="title" id="title" required>
+        </div>
+        <div class="mb-3">
+          <label for="selectedDate" class="form-label">날짜</label>
+          <input type="text" class="form-control" name="date" id="selectedDate" readonly>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+        <button type="submit" class="btn btn-primary">저장</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+<script>
+  let scheduleModal;
+  document.addEventListener('DOMContentLoaded', function () {
+    const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+      initialView: 'dayGridMonth',
+      height: 500,
+      dateClick: function (info) {
+        document.getElementById('selectedDate').value = info.dateStr;
+        scheduleModal = new bootstrap.Modal(document.getElementById('scheduleModal'));
+        scheduleModal.show();
+      }
+    });
+    calendar.render();
+  });
+</script>
+
+</body>
+</html>
