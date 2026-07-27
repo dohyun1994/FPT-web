@@ -38,6 +38,8 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation("org.apache.commons:commons-lang3:3.17.0")
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
+	// 암호화 모듈
+	implementation 'com.github.ulisesbocchio:jasypt-spring-boot-starter:4.0.4'
 
 }
 
